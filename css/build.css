@@ -1,3 +1,22 @@
 fl-helper[name="social-actions"] .social-actions {
   display: inline!important;
 }
+
+fl-helper[name="social-actions"] .social-actions .like,
+fl-helper[name="social-actions"] .social-actions .bookmark {
+  cursor: pointer;
+  display: none;
+}
+fl-helper[name="social-actions"] .like-count {
+  display: none;
+}
+
+fl-helper[name="social-actions"] .like-container {
+  display: none;
+  align-items: center;
+}
+
+fl-helper[name="social-actions"] .like-container span {
+  margin-right: 10px;
+  padding-bottom: 2px;
+}
