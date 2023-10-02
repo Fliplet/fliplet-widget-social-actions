@@ -29,8 +29,25 @@
     ],
     "assets": [
       "css/build.css",
-      "js/build.js"
+      "js/build.js",
+      "css/index.scss"
     ],
     "appAssets": []
+  },
+  "themeSettings": {
+    "variablePrefix": "social",
+    "variables": [
+      {
+        "description": "Color",
+        "fields": [
+          {
+            "name": "background",
+            "default": "#ccc",
+            "label": "Full icon color",
+            "type": "color"
+          }
+        ]
+      }
+    ]
   }
 }
