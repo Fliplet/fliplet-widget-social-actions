@@ -63,6 +63,7 @@ Fliplet.Widget.instance({
         }
       ];
       var accessRules = [...accessRulesBookmarks, ...accessRulesLikes];
+      const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
       const globalSocialActionsDataSource = 'Global Social Actions';
       const thisy = this;
       const selectedOption = this.fields.typeOfSocialFeature;
@@ -141,23 +142,23 @@ Fliplet.Widget.instance({
               user = handleSession(session);
             } else {
             // not logged in
-              user = Fliplet.Profile.getDeviceUuid().uuid;
+              user = deviceUuid;
             }
 
             return Fliplet.DataSources.connect(globalDataSourceId)
               .then(function(connection) {
                 return connection.findOne({
                   where: {
-                    'User': user,
+                    User: { $in: [user, deviceUuid] },
                     'Data Source Id': originalDataSource,
                     'Data Source Entry Id': dataSourceEntryId,
-                    'Type': selectedOption
+                    'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
                   }
                 }).then(function(record) {
                   if (record) {
                     return connection.removeById(record.id)
                       .then(function onRemove() {
-                        if (selectedOption === 'Bookmark') {
+                        if ($thisClick.find('.bookmark:visible').length !== 0) {
                           $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
                         } else {
                           $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
@@ -171,11 +172,11 @@ Fliplet.Widget.instance({
                     'Data Source Id': originalDataSource,
                     'Data Source Entry Id': dataSourceEntryId,
                     'Datetime': new Date(),
-                    'Type': selectedOption,
+                    'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like',
                     'PageId': Fliplet.Env.get('pageId'),
                     'AppId': Fliplet.Env.get('appId')
                   }).then(function() {
-                    if (selectedOption === 'Bookmark') {
+                    if ($thisClick.find('.bookmark:visible').length !== 0) {
                       $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
                     } else {
                       $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
@@ -198,13 +199,13 @@ Fliplet.Widget.instance({
             user = handleSession(session);
           } else {
             // not logged in
-            user = Fliplet.Profile.getDeviceUuid().uuid;
+            user = deviceUuid;
           }
 
           return Fliplet.DataSources.connect(globalDataSourceId)
             .then(function(connection) {
               var where = {
-                'User': user,
+                User: { $in: [user, deviceUuid] },
                 'Data Source Id': dataSourceId,
                 'Data Source Entry Id': entryId,
                 'Type': selectedOption
@@ -213,8 +214,6 @@ Fliplet.Widget.instance({
               if (Array.isArray(entryId)) { // from list repeater
                 where['Data Source Entry Id'] = { $in: entryId };
               }
-
-              debugger;
 
               if (selectedOption === 'Bookmark') {
                 return connection.findOne({
