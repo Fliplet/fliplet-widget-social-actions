@@ -14,55 +14,57 @@ Fliplet.Widget.instance({
       '</div>'
     ].join(''),
     ready: async function() {
-      var accessRulesBookmarks = [
-        { 'type': ['insert'], 'allow': 'all', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Bookmark' } }
-          ]
-        },
-        { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-          'require': [
+      const accessRulesObj = {
+        accessRulesBookmarks: [
+          { 'type': ['insert'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Email': { 'equals': '{{user.[Email]}}' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+            ]
+          },
+          { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
             { 'Type': { 'equals': 'Bookmark' } },
             { 'Email': { 'equals': '{{user.[Email]}}' } }
           ]
-        },
-        { 'type': ['delete'], 'allow': 'all', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Bookmark' } },
-            { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-          ]
-        },
-        { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
-          { 'Type': { 'equals': 'Bookmark' } },
-          { 'Email': { 'equals': '{{user.[Email]}}' } }
+          },
+          { 'type': ['select'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+            ]
+          }
+        ],
+        accessRulesLikes: [
+          { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } },
+              { 'Email': { 'equals': '{{user.[Email]}}' } }
+            ]
+          },
+          { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } }
+            ]
+          }
         ]
-        },
-        { 'type': ['select'], 'allow': 'all', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Bookmark' } },
-            { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-          ]
-        }
-      ];
-      var accessRulesLikes = [
-        { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Like' } }
-          ]
-        },
-        { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Like' } },
-            { 'Email': { 'equals': '{{user.[Email]}}' } }
-          ]
-        },
-        { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
-          'require': [
-            { 'Type': { 'equals': 'Like' } }
-          ]
-        }
-      ];
-      var accessRules = [...accessRulesBookmarks, ...accessRulesLikes];
+      };
+      const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
       const globalSocialActionsDataSource = 'Global Social Actions';
       const socialActionThis = this;
@@ -86,11 +88,11 @@ Fliplet.Widget.instance({
       });
 
       // TODO uncomment for list repeater and test it
-      // Fliplet.Hooks.on('repeaterDataRetrieved', function(options) {
-      //   if (options.data.length) {
-      //     manageSocialActionDataSource(options.data[0].dataSourceId, options.data.map(el => el.id));
-      //   }
-      // });
+      Fliplet.Hooks.on('repeaterDataRetrieved', function(options) {
+        if (options.data.length) {
+          manageSocialActionDataSource(options.data[0].dataSourceId, options.data.map(el => el.id));
+        }
+      });
 
       function manageSocialActionDataSource(dataSourceId, entryId) {
         return Fliplet.DataSources.get({
@@ -98,7 +100,7 @@ Fliplet.Widget.instance({
           where: { appId }
         })
           .then(function(dataSources) {
-            var dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
+            const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
 
             if (!dsExist) {
               return Fliplet.DataSources.create({
@@ -142,7 +144,7 @@ Fliplet.Widget.instance({
           const dataSourceEntryId = $thisClick.data('entry-id');
 
           return Fliplet.User.getCachedSession().then(function(session) {
-            var user = '';
+            let user = '';
 
             if (session && session.entries) {
               user = handleSession(session);
@@ -150,7 +152,7 @@ Fliplet.Widget.instance({
 
             return Fliplet.DataSources.connect(globalDataSourceId)
               .then(function(connection) {
-                var where = {
+                let where = {
                   'Data Source Id': originalDataSource,
                   'Data Source Entry Id': dataSourceEntryId,
                   'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
@@ -202,7 +204,7 @@ Fliplet.Widget.instance({
         const $el = $(socialActionThis.$el);
 
         return Fliplet.User.getCachedSession().then(function(session) {
-          var user = '';
+          let user = '';
 
           if (session && session.entries) {
             user = handleSession(session);
@@ -210,7 +212,7 @@ Fliplet.Widget.instance({
 
           return Fliplet.DataSources.connect(globalDataSourceId)
             .then(function(connection) {
-              var where = {
+              let where = {
                 'Data Source Id': dataSourceId,
                 'Data Source Entry Id': entryId,
                 'Type': selectedOption
@@ -262,7 +264,7 @@ Fliplet.Widget.instance({
                       .removeClass('fa-heart-o');
                   }
 
-                  var socialAction = $el.find('.social-actions');
+                  let socialAction = $el.find('.social-actions');
 
                   socialAction
                     .attr('data-original-datasource-id', dataSourceId)
