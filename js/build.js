@@ -13,6 +13,20 @@ Fliplet.Widget.instance({
       '</div>',
       '</div>'
     ].join(''),
+    data: {
+      dataSourceLfdId: null
+    },
+    async beforeReady() {
+      if (Fliplet.DynamicContainer) {
+        this.dataSourceLfdId = await Fliplet.DynamicContainer.get().then(function(
+          container
+        ) {
+          return container.connection().then(function(connection) {
+            return connection.id;
+          });
+        });
+      }
+    },
     ready: async function() {
       const accessRulesObj = {
         accessRulesBookmarks: [
@@ -88,11 +102,15 @@ Fliplet.Widget.instance({
       });
 
       // TODO uncomment for list repeater and test it
-      Fliplet.Hooks.on('repeaterDataRetrieved', function(options) {
-        if (options.data.length) {
-          manageSocialActionDataSource(options.data[0].dataSourceId, options.data.map(el => el.id));
-        }
-      });
+      // Fliplet.Hooks.on('repeaterDataRetrieved', function(options) {
+      //   if (options.data.length) {
+      //     manageSocialActionDataSource(options.data[0].dataSourceId, options.data.map(el => el.id));
+      //   }
+      // });
+      Fliplet.ListRepeater ? Fliplet.ListRepeater.get()
+        .then(function(repeater) {
+          manageSocialActionDataSource(socialActionThis.dataSourceLfdId, repeater.rows.map(el => el.id));
+        }) : '';
 
       function manageSocialActionDataSource(dataSourceId, entryId) {
         return Fliplet.DataSources.get({
