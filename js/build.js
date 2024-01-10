@@ -81,16 +81,16 @@ Fliplet.Widget.instance({
       const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
       const globalSocialActionsDataSource = 'Global Social Actions';
-      const socialActionThis = this;
+      const thisSocialAction = this;
 
-      socialActionThis.fields = _.assign(
+      thisSocialAction.fields = _.assign(
         {
           typeOfSocialFeature: undefined
         },
-        socialActionThis.fields
+        thisSocialAction.fields
       );
 
-      const selectedOption = socialActionThis.fields.typeOfSocialFeature;
+      const selectedOption = thisSocialAction.fields.typeOfSocialFeature;
       const columnsForSocialDataSource = [
         'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
       ];
@@ -109,7 +109,7 @@ Fliplet.Widget.instance({
       // });
       Fliplet.ListRepeater ? Fliplet.ListRepeater.get()
         .then(function(repeater) {
-          manageSocialActionDataSource(socialActionThis.dataSourceLfdId, repeater.rows.map(el => el.id));
+          manageSocialActionDataSource(thisSocialAction.dataSourceLfdId, repeater.rows.map(el => el.id));
         }) : '';
 
       function manageSocialActionDataSource(dataSourceId, entryId) {
@@ -219,7 +219,7 @@ Fliplet.Widget.instance({
       }
 
       function setAttributes(dataSourceId, globalDataSourceId, entryId) {
-        const $el = $(socialActionThis.$el);
+        const $el = $(thisSocialAction.$el);
 
         return Fliplet.User.getCachedSession().then(function(session) {
           let user = '';
@@ -322,7 +322,7 @@ Fliplet.Widget.instance({
 //     ready: async function() {
 //       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
 //       const globalSocialActionsDataSource = 'Global Social Actions';
-//       const socialActionThis = this;
+//       const thisSocialAction = this;
 //       const selectedOption = this.fields.typeOfSocialFeature;
 //       const columnsForSocialDataSource = [
 //         'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
@@ -466,7 +466,7 @@ Fliplet.Widget.instance({
 //       }
 
 //       function setAttributes(dataSourceId, globalDataSourceId, entryId) {
-//         const $el = $(socialActionThis.$el);
+//         const $el = $(thisSocialAction.$el);
 
 //         return Fliplet.User.getCachedSession().then(function(session) {
 //           var user = '';
@@ -572,7 +572,7 @@ Fliplet.Widget.instance({
 //       '</div>'
 //     ].join(''),
 //     ready: async function() {
-//       const socialActionThis = this;
+//       const thisSocialAction = this;
 //       const selectedOption = this.fields.typeOfSocialFeature;
 //       const columnsForSocialDataSource = [
 //         'User', 'Data Source Id', 'Data Source Entry Id', 'Datetime'
@@ -658,7 +658,7 @@ Fliplet.Widget.instance({
 //       }
 
 //       function setAttributes(dataSourceId, socialDataSourceId, entryId) {
-//         const $el = $(socialActionThis.$el);
+//         const $el = $(thisSocialAction.$el);
 
 //         return Fliplet.User.getCachedSession().then(function(session) {
 //           return Fliplet.DataSources.connect(socialDataSourceId)
