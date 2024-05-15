@@ -16,150 +16,211 @@ Fliplet.Widget.instance({
     data: {
       dataSourceLfdId: null
     },
-    async beforeReady() {
-      if (Fliplet.DynamicContainer) {
-        this.dataSourceLfdId = await Fliplet.DynamicContainer.get().then(function(
-          container
-        ) {
-          return container.connection().then(function(connection) {
-            return connection.id;
-          });
-        });
-      }
-    },
     ready: async function() {
-      const accessRulesObj = {
-        accessRulesBookmarks: [
-          { 'type': ['insert'], 'allow': 'all', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Bookmark' } }
-            ]
-          },
-          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-            'require': [
+      const socialAction = this;
+      const entry = socialAction?.parent?.entry || {};
+      const socialActionInstanceId = socialAction.id;
+
+      Fliplet.Widget.findParents({ instanceId: socialActionInstanceId }).then(function(widgets) {
+        let dynamicContainer = null;
+        let recordContainer = null;
+        let listRepeater = null;
+
+        widgets.forEach(widget => {
+          if (widget.package === 'com.fliplet.dynamic-container') {
+            dynamicContainer = widget;
+          } else if (widget.package === 'com.fliplet.record-container') {
+            recordContainer = widget;
+          } else if (widget.package === 'com.fliplet.list-repeater') {
+            listRepeater = widget;
+          }
+        });
+
+        if (!dynamicContainer || !dynamicContainer.dataSourceId || (!recordContainer && !listRepeater)) {
+          return;
+        }
+
+        socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
+
+        const accessRulesObj = {
+          accessRulesBookmarks: [
+            { 'type': ['insert'], 'allow': 'all', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Bookmark' } }
+              ]
+            },
+            { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Bookmark' } },
+                { 'Email': { 'equals': '{{user.[Email]}}' } }
+              ]
+            },
+            { 'type': ['delete'], 'allow': 'all', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Bookmark' } },
+                { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+              ]
+            },
+            { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
               { 'Type': { 'equals': 'Bookmark' } },
               { 'Email': { 'equals': '{{user.[Email]}}' } }
             ]
-          },
-          { 'type': ['delete'], 'allow': 'all', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Bookmark' } },
-              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-            ]
-          },
-          { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
-            { 'Type': { 'equals': 'Bookmark' } },
-            { 'Email': { 'equals': '{{user.[Email]}}' } }
-          ]
-          },
-          { 'type': ['select'], 'allow': 'all', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Bookmark' } },
-              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-            ]
-          }
-        ],
-        accessRulesLikes: [
-          { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Like' } }
-            ]
-          },
-          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Like' } },
-              { 'Email': { 'equals': '{{user.[Email]}}' } }
-            ]
-          },
-          { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
-            'require': [
-              { 'Type': { 'equals': 'Like' } }
-            ]
-          }
-        ]
-      };
-      const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
-      const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
-      const globalSocialActionsDataSource = 'Global Social Actions';
-      const thisSocialAction = this;
-
-      thisSocialAction.fields = _.assign(
-        {
-          typeOfSocialFeature: undefined
-        },
-        thisSocialAction.fields
-      );
-
-      const selectedOption = thisSocialAction.fields.typeOfSocialFeature;
-      const columnsForSocialDataSource = [
-        'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
-      ];
-      const appId = Fliplet.Env.get('appId');
-
-      // record container from detail page
-      Fliplet.Hooks.on('recordContainerDataRetrieved', function(record) {
-        manageSocialActionDataSource(record.entry.dataSourceId, record.entry.id);
-      });
-
-      // TODO uncomment for list repeater and test it
-      // Fliplet.Hooks.on('repeaterDataRetrieved', function(options) {
-      //   if (options.data.length) {
-      //     manageSocialActionDataSource(options.data[0].dataSourceId, options.data.map(el => el.id));
-      //   }
-      // });
-      Fliplet.ListRepeater ? Fliplet.ListRepeater.get()
-        .then(function(repeater) {
-          manageSocialActionDataSource(thisSocialAction.dataSourceLfdId, repeater.rows.map(el => el.id));
-        }) : '';
-
-      function manageSocialActionDataSource(dataSourceId, entryId) {
-        return Fliplet.DataSources.get({
-          attributes: ['id', 'name'],
-          where: { appId }
-        })
-          .then(function(dataSources) {
-            const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
-
-            if (!dsExist) {
-              return Fliplet.DataSources.create({
-                name: globalSocialActionsDataSource,
-                appId,
-                columns: columnsForSocialDataSource,
-                accessRules
-              }).then(function(newDataSource) {
-                setAttributes(dataSourceId, newDataSource.id, entryId);
-                setActionClickEvent();
-              });
+            },
+            { 'type': ['select'], 'allow': 'all', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Bookmark' } },
+                { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+              ]
             }
+          ],
+          accessRulesLikes: [
+            { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Like' } }
+              ]
+            },
+            { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Like' } },
+                { 'Email': { 'equals': '{{user.[Email]}}' } }
+              ]
+            },
+            { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
+              'require': [
+                { 'Type': { 'equals': 'Like' } }
+              ]
+            }
+          ]
+        };
 
-            setAttributes(dataSourceId, dsExist.id, entryId);
-            setActionClickEvent();
-          });
-      }
+        const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
+        const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
+        const globalSocialActionsDataSource = 'Global Social Actions';
+        const socialAction = this;
 
-      function handleSession(session) {
+        socialAction.fields = _.assign(
+          {
+            typeOfSocialFeature: undefined
+          },
+          socialAction.fields
+        );
+
+        const selectedOption = socialAction.fields.typeOfSocialFeature;
+        const columnsForSocialDataSource = [
+          'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
+        ];
+        const appId = Fliplet.Env.get('appId');
+
+        manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
+
+        function manageSocialActionDataSource(dataSourceId, entryId) {
+          return Fliplet.DataSources.get({
+            attributes: ['id', 'name'],
+            where: { appId }
+          })
+            .then(function(dataSources) {
+              const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
+
+              if (!dsExist) {
+                return Fliplet.DataSources.create({
+                  name: globalSocialActionsDataSource,
+                  appId,
+                  columns: columnsForSocialDataSource,
+                  accessRules
+                }).then(function(newDataSource) {
+                  setAttributes(dataSourceId, newDataSource.id, entryId);
+                  setActionClickEvent();
+                });
+              }
+
+              setAttributes(dataSourceId, dsExist.id, entryId);
+              setActionClickEvent();
+            });
+        }
+
+        function handleSession(session) {
         // check if the user is connected to a dataSource login
-        if (session.entries.dataSource) {
-          return _.get(session, 'entries.dataSource.data');
+          if (session.entries.dataSource) {
+            return _.get(session, 'entries.dataSource.data');
+          }
+
+          // check if the user is connected to a SAML2 login
+          if (session.entries.saml2) {
+            return _.get(session, 'entries.saml2.user');
+          }
+
+          // check if the user is connected to a Fliplet login
+          if (session.entries.flipletLogin) {
+            return _.get(session, 'entries.flipletLogin');
+          }
         }
 
-        // check if the user is connected to a SAML2 login
-        if (session.entries.saml2) {
-          return _.get(session, 'entries.saml2.user');
+        function setActionClickEvent() {
+          $('.social-actions').off('click').on('click', function() {
+            const $thisClick = $(this);
+            const originalDataSource = $thisClick.data('original-datasource-id');
+            const globalDataSourceId = $thisClick.data('global-datasource-id');
+            const dataSourceEntryId = $thisClick.data('entry-id');
+
+            return Fliplet.User.getCachedSession().then(function(session) {
+              let user = '';
+
+              if (session && session.entries) {
+                user = handleSession(session);
+              }
+
+              return Fliplet.DataSources.connect(globalDataSourceId)
+                .then(function(connection) {
+                  let where = {
+                    'Data Source Id': originalDataSource,
+                    'Data Source Entry Id': dataSourceEntryId,
+                    'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                  };
+
+                  if (user) {
+                    where.Email = user.Email;
+                  } else {
+                    where['Device Uuid'] = deviceUuid;
+                  }
+
+                  return connection.findOne({
+                    where
+                  }).then(function(record) {
+                    if (record) {
+                      return connection.removeById(record.id)
+                        .then(function onRemove() {
+                          if ($thisClick.find('.bookmark:visible').length !== 0) {
+                            $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
+                          } else {
+                            $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
+                            $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) - 1);
+                          }
+                        });
+                    }
+
+                    return connection.insert({
+                      'Email': user ? user.Email : '',
+                      'Device Uuid': deviceUuid,
+                      'Data Source Id': originalDataSource,
+                      'Data Source Entry Id': dataSourceEntryId,
+                      'Datetime': new Date().toISOString(),
+                      'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                    }).then(function() {
+                      if ($thisClick.find('.bookmark:visible').length !== 0) {
+                        $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
+                      } else {
+                        $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
+                        $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) + 1);
+                      }
+                    });
+                  });
+                });
+            });
+          });
         }
 
-        // check if the user is connected to a Fliplet login
-        if (session.entries.flipletLogin) {
-          return _.get(session, 'entries.flipletLogin');
-        }
-      }
-
-      function setActionClickEvent() {
-        $('.social-actions').off('click').on('click', function() {
-          const $thisClick = $(this);
-          const originalDataSource = $thisClick.data('original-datasource-id');
-          const globalDataSourceId = $thisClick.data('global-datasource-id');
-          const dataSourceEntryId = $thisClick.data('entry-id');
+        function setAttributes(dataSourceId, globalDataSourceId, entryId) {
+          const $el = $(socialAction.$el);
 
           return Fliplet.User.getCachedSession().then(function(session) {
             let user = '';
@@ -171,9 +232,9 @@ Fliplet.Widget.instance({
             return Fliplet.DataSources.connect(globalDataSourceId)
               .then(function(connection) {
                 let where = {
-                  'Data Source Id': originalDataSource,
-                  'Data Source Entry Id': dataSourceEntryId,
-                  'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                  'Data Source Id': dataSourceId,
+                  'Data Source Entry Id': entryId,
+                  'Type': selectedOption
                 };
 
                 if (user) {
@@ -182,118 +243,55 @@ Fliplet.Widget.instance({
                   where['Device Uuid'] = deviceUuid;
                 }
 
-                return connection.findOne({
-                  where
-                }).then(function(record) {
-                  if (record) {
-                    return connection.removeById(record.id)
-                      .then(function onRemove() {
-                        if ($thisClick.find('.bookmark:visible').length !== 0) {
-                          $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
-                        } else {
-                          $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
-                          $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) - 1);
-                        }
-                      });
-                  }
+                if (selectedOption === 'Bookmark') {
+                  return connection.findOne({
+                    where
+                  }).then(function(record) {
+                    $el.find('.like').hide();
+                    $el.find('.bookmark').show();
 
-                  return connection.insert({
-                    'Email': user ? user.Email : '',
-                    'Device Uuid': deviceUuid,
-                    'Data Source Id': originalDataSource,
-                    'Data Source Entry Id': dataSourceEntryId,
-                    'Datetime': new Date().toISOString(),
-                    'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
-                  }).then(function() {
-                    if ($thisClick.find('.bookmark:visible').length !== 0) {
-                      $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
-                    } else {
-                      $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
-                      $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) + 1);
+                    if (record) {
+                      $el.find('.bookmark')
+                        .addClass('fa-bookmark')
+                        .removeClass('fa-bookmark-o');
                     }
+
+                    $el.find('.social-actions')
+                      .attr('data-original-datasource-id', dataSourceId);
+                    $el.find('.social-actions')
+                      .attr('data-global-datasource-id', globalDataSourceId);
+                    $el.find('.social-actions')
+                      .attr('data-entry-id', entryId);
                   });
-                });
+                } else if (selectedOption === 'Like') {
+                  return connection.find({
+                    where,
+                    attributes: ['Email', 'Device Uuid']
+                  }).then(function(records) {
+                    $el.find('.like').show();
+                    $el.find('.like-count').show();
+                    $el.find('.like-container').css('display', 'flex');
+
+                    if (records && records.find(el =>
+                      el.data.Email === (user ? user.Email : '') || el.data['Device Uuid'] === deviceUuid)) {
+                      $el.find('.like')
+                        .addClass('fa-heart')
+                        .removeClass('fa-heart-o');
+                    }
+
+                    let socialAction = $el.find('.social-actions');
+
+                    socialAction
+                      .attr('data-original-datasource-id', dataSourceId)
+                      .attr('data-global-datasource-id', globalDataSourceId)
+                      .attr('data-entry-id', entryId);
+                    socialAction.find('.like-count').html(records.length);
+                  });
+                }
               });
           });
-        });
-      }
-
-      function setAttributes(dataSourceId, globalDataSourceId, entryId) {
-        const $el = $(thisSocialAction.$el);
-
-        return Fliplet.User.getCachedSession().then(function(session) {
-          let user = '';
-
-          if (session && session.entries) {
-            user = handleSession(session);
-          }
-
-          return Fliplet.DataSources.connect(globalDataSourceId)
-            .then(function(connection) {
-              let where = {
-                'Data Source Id': dataSourceId,
-                'Data Source Entry Id': entryId,
-                'Type': selectedOption
-              };
-
-              if (user) {
-                where.Email = user.Email;
-              } else {
-                where['Device Uuid'] = deviceUuid;
-              }
-
-              if (Array.isArray(entryId)) { // from list repeater
-                where['Data Source Entry Id'] = { $in: entryId };
-              }
-
-              if (selectedOption === 'Bookmark') {
-                return connection.findOne({
-                  where
-                }).then(function(record) {
-                  $el.find('.like').hide();
-                  $el.find('.bookmark').show();
-
-                  if (record) {
-                    $el.find('.bookmark')
-                      .addClass('fa-bookmark')
-                      .removeClass('fa-bookmark-o');
-                  }
-
-                  $el.find('.social-actions')
-                    .attr('data-original-datasource-id', dataSourceId);
-                  $el.find('.social-actions')
-                    .attr('data-global-datasource-id', globalDataSourceId);
-                  $el.find('.social-actions')
-                    .attr('data-entry-id', entryId);
-                });
-              } else if (selectedOption === 'Like') {
-                return connection.find({
-                  where,
-                  attributes: ['Email', 'Device Uuid']
-                }).then(function(records) {
-                  $el.find('.like').show();
-                  $el.find('.like-count').show();
-                  $el.find('.like-container').css('display', 'flex');
-
-                  if (records && records.find(el =>
-                    el.data.Email === (user ? user.Email : '') || el.data['Device Uuid'] === deviceUuid)) {
-                    $el.find('.like')
-                      .addClass('fa-heart')
-                      .removeClass('fa-heart-o');
-                  }
-
-                  let socialAction = $el.find('.social-actions');
-
-                  socialAction
-                    .attr('data-original-datasource-id', dataSourceId)
-                    .attr('data-global-datasource-id', globalDataSourceId)
-                    .attr('data-entry-id', entryId);
-                  socialAction.find('.like-count').html(records.length);
-                });
-              }
-            });
-        });
-      }
+        }
+      });
     },
     views: [
       {
@@ -322,7 +320,7 @@ Fliplet.Widget.instance({
 //     ready: async function() {
 //       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
 //       const globalSocialActionsDataSource = 'Global Social Actions';
-//       const thisSocialAction = this;
+//       const socialAction = this;
 //       const selectedOption = this.fields.typeOfSocialFeature;
 //       const columnsForSocialDataSource = [
 //         'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
@@ -466,7 +464,7 @@ Fliplet.Widget.instance({
 //       }
 
 //       function setAttributes(dataSourceId, globalDataSourceId, entryId) {
-//         const $el = $(thisSocialAction.$el);
+//         const $el = $(socialAction.$el);
 
 //         return Fliplet.User.getCachedSession().then(function(session) {
 //           var user = '';
@@ -572,7 +570,7 @@ Fliplet.Widget.instance({
 //       '</div>'
 //     ].join(''),
 //     ready: async function() {
-//       const thisSocialAction = this;
+//       const socialAction = this;
 //       const selectedOption = this.fields.typeOfSocialFeature;
 //       const columnsForSocialDataSource = [
 //         'User', 'Data Source Id', 'Data Source Entry Id', 'Datetime'
@@ -658,7 +656,7 @@ Fliplet.Widget.instance({
 //       }
 
 //       function setAttributes(dataSourceId, socialDataSourceId, entryId) {
-//         const $el = $(thisSocialAction.$el);
+//         const $el = $(socialAction.$el);
 
 //         return Fliplet.User.getCachedSession().then(function(session) {
 //           return Fliplet.DataSources.connect(socialDataSourceId)
