@@ -66,6 +66,8 @@ Fliplet.Widget.instance({
               { 'Email': { 'equals': '{{user.[Email]}}' } }
             ]
             },
+            // TODO remove this condition when we agree on the security rules
+            { 'type': ['select'], 'allow': 'all', 'enabled': true },
             { 'type': ['select'], 'allow': 'all', 'enabled': true,
               'require': [
                 { 'Type': { 'equals': 'Bookmark' } },
@@ -112,6 +114,10 @@ Fliplet.Widget.instance({
 
         manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
 
+        // TODO - Fliplet.DataSources.get and Fliplet.DataSources.create might be sufficient
+        // TODO - it is not optimized at all to call get and create every time
+        // TODO - Eng should create a solution to create this DS on every app creation?
+        // TODO - It might be better to be hidden from the user
         function manageSocialActionDataSource(dataSourceId, entryId) {
           return Fliplet.DataSources.get({
             attributes: ['id', 'name'],
