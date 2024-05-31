@@ -3,10 +3,11 @@
   "package": "com.fliplet.social-icons",
   "version": "1.0.0",
   "icon": "img/icon.png",
-  "tags": ["type:component", "category:general"],
+  "tags": ["type:component", "category:general", "beta:true"],
   "provider_only": false,
   "references": [],
   "settings": {
+    "asyncRendering": true,
     "interfaceWidgetPackage": "com.fliplet.helper-configuration"
   },
   "html_tag": "div",
@@ -29,8 +30,25 @@
     ],
     "assets": [
       "css/build.css",
-      "js/build.js"
+      "js/build.js",
+      "css/index.scss"
     ],
     "appAssets": []
+  },
+  "themeSettings": {
+    "variablePrefix": "social",
+    "variables": [
+      {
+        "description": "Color",
+        "fields": [
+          {
+            "name": "background",
+            "default": "#ccc",
+            "label": "Full icon color",
+            "type": "color"
+          }
+        ]
+      }
+    ]
   }
 }
