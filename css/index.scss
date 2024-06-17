@@ -25,11 +25,13 @@ $variablePrefix: "social";
     $instanceSelector: '#{$instanceSelector}[data-id="#{$widgetInstanceId}"]';
   }
 
+  .fa-bookmark {
+    color: red!important;
+  }
+  
   #{$instanceSelector} {
     // social-icon full background
-    .fa-bookmark {
-      color: red!important;
-    }
+    
     // .fa-bookmark, .fa-heart {
     //   color: map-get($configuration, social-background)!important;
 
