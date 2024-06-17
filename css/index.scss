@@ -25,24 +25,25 @@ $variablePrefix: "social";
     $instanceSelector: '#{$instanceSelector}[data-id="#{$widgetInstanceId}"]';
   }
 
-  .fa-bookmark {
-    color: red!important;
-  }
-  
   #{$instanceSelector} {
+
     // social-icon full background
-    
-    // .fa-bookmark, .fa-heart {
-    //   color: map-get($configuration, social-background)!important;
+    .social-actions {
 
-    //   @include above($tabletBreakpoint) {
-    //     color: map-get($configuration, social-backgroundTablet)!important;
-    //   }
+      .fa-bookmark,
+      .fa-heart {
+        color: map-get($configuration, social-background);
 
-    //   @include above($desktopBreakpoint) {
-    //     color: map-get($configuration, social-backgroundDesktop)!important;
-    //   }
-    // }
+        @include above($tabletBreakpoint) {
+          color: map-get($configuration, social-backgroundTablet);
+        }
+
+        @include above($desktopBreakpoint) {
+          color: map-get($configuration, social-backgroundDesktop);
+        }
+      }
+    }
+
     // social-icon full background
   }
 }
