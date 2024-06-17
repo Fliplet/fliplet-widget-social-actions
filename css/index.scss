@@ -26,18 +26,16 @@ $variablePrefix: "social";
   }
 
   #{$instanceSelector} {
-
     // social-icon full background
-      .social-actions {
-      // .fa-heart {
-        color: map-get($configuration, social-background);
+      .fa-bookmark,
+      .fa-heart {
+        color: map-get($configuration, social-background) !important;
 
         @include above($tabletBreakpoint) {
-          color: map-get($configuration, social-backgroundTablet);
+          color: map-get($configuration, social-backgroundTablet) !important;
         }
-
         @include above($desktopBreakpoint) {
-          color: map-get($configuration, social-backgroundDesktop);
+          color: map-get($configuration, social-backgroundDesktop) !important;
         }
       }
 
