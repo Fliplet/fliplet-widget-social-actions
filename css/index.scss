@@ -25,17 +25,6 @@ $variablePrefix: "social";
     $instanceSelector: '#{$instanceSelector}[data-id="#{$widgetInstanceId}"]';
   }
 
-  .fa-bookmark,
-      .fa-heart {
-        color: map-get($configuration, social-background) !important;
-
-        @include above($tabletBreakpoint) {
-          color: map-get($configuration, social-backgroundTablet) !important;
-        }
-        @include above($desktopBreakpoint) {
-          color: map-get($configuration, social-backgroundDesktop) !important;
-        }
-      }
   #{$instanceSelector} {
     // social-icon full background
       .fa-bookmark,
@@ -51,6 +40,11 @@ $variablePrefix: "social";
       }
 
     // social-icon full background
+  }
+
+  .fa-bookmark {
+    color: red!important;
+    background-color: blue!important;
   }
 }
 
