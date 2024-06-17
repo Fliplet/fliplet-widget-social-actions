@@ -26,6 +26,7 @@ $variablePrefix: "social";
   }
 
   #{$instanceSelector} {
+    background: red!important;
     // social-icon full background
       .fa-bookmark,
       .fa-heart {
@@ -40,11 +41,6 @@ $variablePrefix: "social";
       }
 
     // social-icon full background
-  }
-
-  .fa-bookmark {
-    color: red!important;
-    background-color: blue!important;
   }
 }
 
