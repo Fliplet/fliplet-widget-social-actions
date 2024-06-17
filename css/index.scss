@@ -27,7 +27,6 @@ $variablePrefix: "social";
 
   #{$instanceSelector} {
     // social-icon full background
-
     .fa-bookmark, .fa-heart {
       color: map-get($configuration, social-background);
 
@@ -39,7 +38,6 @@ $variablePrefix: "social";
         color: map-get($configuration, social-backgroundDesktop);
       }
     }
-
     // social-icon full background
   }
 }

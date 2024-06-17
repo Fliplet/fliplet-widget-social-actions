@@ -45,7 +45,17 @@
             "name": "background",
             "default": "#ccc",
             "label": "Full icon color",
-            "type": "color"
+            "type": "color",
+            "breakpoints": {
+              "tablet": {
+                "name": "backgroundTablet",
+                "default": "inherit-mobile"
+              },
+              "desktop": {
+                "name": "backgroundDesktop",
+                "default": "inherit-tablet"
+              }
+            }
           }
         ]
       }
