@@ -25,21 +25,7 @@ $variablePrefix: "social";
     $instanceSelector: '#{$instanceSelector}[data-id="#{$widgetInstanceId}"]';
   }
 
-  fl-helper[name="social-actions"] .fa-bookmark {
-    color: map-get($configuration, social-background) !important;
-
-    @include above($tabletBreakpoint) {
-      color: map-get($configuration, social-backgroundTablet) !important;
-    }
-
-    @include above($desktopBreakpoint) {
-      color: map-get($configuration, social-backgroundDesktop) !important;
-    }
-  }
-
   #{$instanceSelector} {
-    background: red !important;
-
     // social-icon full background
     .fa-bookmark,
     .fa-heart {
