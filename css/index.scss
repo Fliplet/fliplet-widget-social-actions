@@ -28,10 +28,8 @@ $variablePrefix: "social";
   #{$instanceSelector} {
 
     // social-icon full background
-    .social-actions {
-
-      .fa-bookmark,
-      .fa-heart {
+      .fa-bookmark {
+      // .fa-heart {
         color: map-get($configuration, social-background);
 
         @include above($tabletBreakpoint) {
@@ -42,7 +40,6 @@ $variablePrefix: "social";
           color: map-get($configuration, social-backgroundDesktop);
         }
       }
-    }
 
     // social-icon full background
   }
