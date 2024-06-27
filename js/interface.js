@@ -93,7 +93,8 @@ Fliplet.DataSources.get({
           label: '',
           // hidden: true,
           ready: function() {
-            Fliplet.Helper.field('socialDataSourceId').set(socialDataSourceId);
+            this.val(socialDataSourceId);
+            // Fliplet.Helper.field('socialDataSourceId').set(socialDataSourceId);
           }
         }
       ]
