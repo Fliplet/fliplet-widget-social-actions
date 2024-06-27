@@ -77,7 +77,7 @@ Fliplet.DataSources.get({
     }
 
     return Promise.resolve(dsExist.id);
-  }).then((socialDataSourceId) => {
+  }).then((dsId) => {
     return Fliplet.Widget.generateInterface({
       title: 'Social actions',
       fields: [
@@ -91,19 +91,11 @@ Fliplet.DataSources.get({
           name: 'socialDataSourceId',
           type: 'text',
           label: 'Global Social Actions Data Source ID',
-          hidden: true,
+          // hidden: true,
           default: '',
           ready: function() {
-            this.val(socialDataSourceId);
+            this.val(dsId);
           }
-        },
-        {
-          name: 'firstTime',
-          type: 'checkbox',
-          label: 'Display slides once',
-          description: 'The slides will only be displayed once for first time users',
-          options: [{ value: true, label: 'Yes' }],
-          default: []
         }
       ]
     });
