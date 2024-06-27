@@ -90,11 +90,20 @@ Fliplet.DataSources.get({
         {
           name: 'socialDataSourceId',
           type: 'text',
-          label: '',
+          label: 'Global Social Actions Data Source ID',
           hidden: true,
+          default: '',
           ready: function() {
             this.val(socialDataSourceId);
           }
+        },
+        {
+          name: 'firstTime',
+          type: 'checkbox',
+          label: 'Display slides once',
+          description: 'The slides will only be displayed once for first time users',
+          options: [{ value: true, label: 'Yes' }],
+          default: []
         }
       ]
     });
