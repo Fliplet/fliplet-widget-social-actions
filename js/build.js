@@ -36,112 +36,34 @@ Fliplet.Widget.instance({
           }
         });
 
-        if (!dynamicContainer || !dynamicContainer.dataSourceId || (!recordContainer && !listRepeater)) {
-          return;
+        if (!dynamicContainer || !dynamicContainer.dataSourceId) {
+          if (!dynamicContainer) {
+            return Fliplet.UI.Toast('Please add Dynamic container component');
+          }
+
+          return Fliplet.UI.Toast('Please configure the Dynamic data source');
+        } else if (!recordContainer && !listRepeater) {
+          return Fliplet.UI.Toast('Please add the Record or List Repeater component');
         }
 
         socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
-
-        const accessRulesObj = {
-          accessRulesBookmarks: [
-            { 'type': ['insert'], 'allow': 'all', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Bookmark' } }
-              ]
-            },
-            { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Bookmark' } },
-                { 'Email': { 'equals': '{{user.[Email]}}' } }
-              ]
-            },
-            { 'type': ['delete'], 'allow': 'all', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Bookmark' } },
-                { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-              ]
-            },
-            { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
-              { 'Type': { 'equals': 'Bookmark' } },
-              { 'Email': { 'equals': '{{user.[Email]}}' } }
-            ]
-            },
-            // TODO remove this condition when we agree on the security rules
-            { 'type': ['select'], 'allow': 'all', 'enabled': true },
-            { 'type': ['select'], 'allow': 'all', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Bookmark' } },
-                { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
-              ]
-            }
-          ],
-          accessRulesLikes: [
-            { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Like' } }
-              ]
-            },
-            { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Like' } },
-                { 'Email': { 'equals': '{{user.[Email]}}' } }
-              ]
-            },
-            { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
-              'require': [
-                { 'Type': { 'equals': 'Like' } }
-              ]
-            }
-          ]
-        };
-
-        const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
-        const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
-        const globalSocialActionsDataSource = 'Global Social Actions';
-
         socialAction.fields = _.assign(
           {
-            typeOfSocialFeature: undefined
+            typeOfSocialFeature: undefined,
+            socialDataSourceId: null
           },
           socialAction.fields
         );
 
+        const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
         const selectedOption = socialAction.fields.typeOfSocialFeature;
-        const columnsForSocialDataSource = [
-          'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
-        ];
-        const appId = Fliplet.Env.get('appId');
 
-        manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
-
-        // TODO - Fliplet.DataSources.get and Fliplet.DataSources.create might be sufficient
         // TODO - it is not optimized at all to call get and create every time
         // TODO - Eng should create a solution to create this DS on every app creation?
         // TODO - It might be better to be hidden from the user
-        function manageSocialActionDataSource(dataSourceId, entryId) {
-          return Fliplet.DataSources.get({
-            attributes: ['id', 'name'],
-            where: { appId }
-          })
-            .then(function(dataSources) {
-              const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
 
-              if (!dsExist) {
-                return Fliplet.DataSources.create({
-                  name: globalSocialActionsDataSource,
-                  appId,
-                  columns: columnsForSocialDataSource,
-                  accessRules
-                }).then(function(newDataSource) {
-                  setAttributes(dataSourceId, newDataSource.id, entryId);
-                  setActionClickEvent();
-                });
-              }
-
-              setAttributes(dataSourceId, dsExist.id, entryId);
-              setActionClickEvent();
-            });
-        }
+        setAttributes(socialAction.dataSourceLfdId, socialAction.fields.socialDataSourceId, entry.id);
+        setActionClickEvent();
 
         function handleSession(session) {
         // check if the user is connected to a dataSource login
@@ -163,7 +85,7 @@ Fliplet.Widget.instance({
         function setActionClickEvent() {
           $('.social-actions').off('click').on('click', function() {
             const $thisClick = $(this);
-            const originalDataSource = $thisClick.data('original-datasource-id');
+            const entryDataSource = $thisClick.data('original-datasource-id');
             const globalDataSourceId = $thisClick.data('global-datasource-id');
             const dataSourceEntryId = $thisClick.data('entry-id');
 
@@ -177,7 +99,7 @@ Fliplet.Widget.instance({
               return Fliplet.DataSources.connect(globalDataSourceId)
                 .then(function(connection) {
                   let where = {
-                    'Data Source Id': originalDataSource,
+                    'Data Source Id': entryDataSource,
                     'Data Source Entry Id': dataSourceEntryId,
                     'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
                   };
@@ -206,9 +128,9 @@ Fliplet.Widget.instance({
                     return connection.insert({
                       'Email': user ? user.Email : '',
                       'Device Uuid': deviceUuid,
-                      'Data Source Id': originalDataSource,
+                      'Data Source Id': entryDataSource,
                       'Data Source Entry Id': dataSourceEntryId,
-                      'Datetime': new Date().toISOString(),
+                      'DateTime': new Date().toISOString(),
                       'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
                     }).then(function() {
                       if ($thisClick.find('.bookmark:visible').length !== 0) {
@@ -224,7 +146,7 @@ Fliplet.Widget.instance({
           });
         }
 
-        function setAttributes(dataSourceId, globalDataSourceId, entryId) {
+        function setAttributes(dataSourceId, globalSocialActionsDSId, entryId) {
           const $el = $(socialAction.$el);
 
           return Fliplet.User.getCachedSession().then(function(session) {
@@ -234,7 +156,7 @@ Fliplet.Widget.instance({
               user = handleSession(session);
             }
 
-            return Fliplet.DataSources.connect(globalDataSourceId)
+            return Fliplet.DataSources.connect(globalSocialActionsDSId)
               .then(function(connection) {
                 let where = {
                   'Data Source Id': dataSourceId,
@@ -264,7 +186,7 @@ Fliplet.Widget.instance({
                     $el.find('.social-actions')
                       .attr('data-original-datasource-id', dataSourceId);
                     $el.find('.social-actions')
-                      .attr('data-global-datasource-id', globalDataSourceId);
+                      .attr('data-global-datasource-id', globalSocialActionsDSId);
                     $el.find('.social-actions')
                       .attr('data-entry-id', entryId);
                   });
@@ -288,7 +210,7 @@ Fliplet.Widget.instance({
 
                     currentSocialAction
                       .attr('data-original-datasource-id', dataSourceId)
-                      .attr('data-global-datasource-id', globalDataSourceId)
+                      .attr('data-global-datasource-id', globalSocialActionsDSId)
                       .attr('data-entry-id', entryId);
                     currentSocialAction.find('.like-count').html(records.length);
                   });
