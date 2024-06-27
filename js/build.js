@@ -47,7 +47,6 @@ Fliplet.Widget.instance({
         }
 
         socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
-        debugger;
         socialAction.fields = _.assign(
           {
             typeOfSocialFeature: undefined,
