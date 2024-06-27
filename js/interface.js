@@ -91,8 +91,7 @@ Fliplet.DataSources.get({
           name: 'socialDataSourceId',
           type: 'text',
           label: '',
-          value: socialDataSourceId,
-          hidden: true,
+          // hidden: true,
           ready: function() {
             Fliplet.Helper.field('socialDataSourceId').set(socialDataSourceId);
           }
