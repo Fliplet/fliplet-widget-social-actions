@@ -21,12 +21,12 @@ fl-helper[name="social-actions"] .like-container span {
   padding-bottom: 2px;
 }
 
-fl-helper[name="social-actions"].small {
+fl-helper[name="social-actions"] .small {
   font-size: 16px;
 }
-fl-helper[name="social-actions"].medium {
+fl-helper[name="social-actions"] .medium {
   font-size: 18px;
 }
-fl-helper[name="social-actions"].large {
+fl-helper[name="social-actions"] .large {
   font-size: 20px;
 }
