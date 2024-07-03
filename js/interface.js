@@ -96,6 +96,17 @@ Fliplet.DataSources.get({
           ready: function() {
             this.val(dsId);
           }
+        },
+        {
+          name: 'iconSize',
+          type: 'radio',
+          label: 'Select the icon size',
+          default: 'small',
+          options: [
+            { value: 'small', label: 'Small' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'large', label: 'Large' }
+          ]
         }
       ]
     });

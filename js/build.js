@@ -50,7 +50,8 @@ Fliplet.Widget.instance({
         socialAction.fields = _.assign(
           {
             typeOfSocialFeature: undefined,
-            socialDataSourceId: null
+            socialDataSourceId: null,
+            iconSize: 'small'
           },
           socialAction.fields
         );
@@ -148,6 +149,9 @@ Fliplet.Widget.instance({
 
         function setAttributes(dataSourceId, globalSocialActionsDSId, entryId) {
           const $el = $(socialAction.$el);
+          let $currentSocialAction = $el.find('.social-actions');
+
+          $currentSocialAction.addClass(socialAction.fields.iconSize);
 
           return Fliplet.User.getCachedSession().then(function(session) {
             let user = '';
@@ -183,12 +187,9 @@ Fliplet.Widget.instance({
                         .removeClass('fa-bookmark-o');
                     }
 
-                    $el.find('.social-actions')
-                      .attr('data-original-datasource-id', dataSourceId);
-                    $el.find('.social-actions')
-                      .attr('data-global-datasource-id', globalSocialActionsDSId);
-                    $el.find('.social-actions')
-                      .attr('data-entry-id', entryId);
+                    $currentSocialAction.attr('data-original-datasource-id', dataSourceId);
+                    $currentSocialAction.attr('data-global-datasource-id', globalSocialActionsDSId);
+                    $currentSocialAction.attr('data-entry-id', entryId);
                   });
                 } else if (selectedOption === 'Like') {
                   return connection.find({
@@ -206,13 +207,11 @@ Fliplet.Widget.instance({
                         .removeClass('fa-heart-o');
                     }
 
-                    let currentSocialAction = $el.find('.social-actions');
-
-                    currentSocialAction
+                    $currentSocialAction
                       .attr('data-original-datasource-id', dataSourceId)
                       .attr('data-global-datasource-id', globalSocialActionsDSId)
                       .attr('data-entry-id', entryId);
-                    currentSocialAction.find('.like-count').html(records.length);
+                    $currentSocialAction.find('.like-count').html(records.length);
                   });
                 }
               });
