@@ -49,7 +49,7 @@ Fliplet.Widget.instance({
         socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
         socialAction.fields = _.assign(
           {
-            typeOfSocialFeature: undefined,
+            typeOfSocialFeature: 'Bookmark',
             socialDataSourceId: null,
             iconSize: 'small'
           },
@@ -150,6 +150,10 @@ Fliplet.Widget.instance({
         function setAttributes(dataSourceId, globalSocialActionsDSId, entryId) {
           const $el = $(socialAction.$el);
           let $currentSocialAction = $el.find('.social-actions');
+
+          if (Fliplet.Env.get('mode') === 'interact') {
+            $currentSocialAction.addClass('editMode');
+          }
 
           $currentSocialAction.addClass(socialAction.fields.iconSize);
 

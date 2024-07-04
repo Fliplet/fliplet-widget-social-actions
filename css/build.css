@@ -30,3 +30,9 @@ fl-helper[name="social-actions"] .medium {
 fl-helper[name="social-actions"] .large {
   font-size: 20px;
 }
+
+fl-helper[name="social-actions"] .social-actions.editMode {
+  margin: 0 5px;
+  padding: 6px;
+  border: 1px dotted #6A6868; 
+}

@@ -85,7 +85,8 @@ Fliplet.DataSources.get({
           name: 'typeOfSocialFeature',
           type: 'radio',
           label: 'Select type for social feature',
-          options: ['Bookmark', 'Like']
+          options: ['Bookmark', 'Like'],
+          default: 'Bookmark'
         },
         {
           name: 'socialDataSourceId',
