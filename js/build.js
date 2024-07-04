@@ -225,9 +225,9 @@ Fliplet.Widget.instance({
     },
     views: [
       {
-        name: 'typeContent',
-        displayName: 'typeContent',
-        placeholder: '<div class="well text-center"></div>'
+        name: 'content',
+        displayName: 'Social action content',
+        placeholder: '<p>Configure Social action component</p>'
       }
     ]
   }
