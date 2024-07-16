@@ -32,15 +32,15 @@ fl-helper[name="social-actions"] .large {
   font-size: 20px;
 }
 
-fl-helper[name="social-actions"].small .like-count {
+fl-helper[name="social-actions"] .small .like-count {
   font-size: 8px;
 }
 
-fl-helper[name="social-actions"].medium .like-count {
+fl-helper[name="social-actions"] .medium .like-count {
   font-size: 9px;
 }
 
-fl-helper[name="social-actions"].large .like-count {
+fl-helper[name="social-actions"] .large .like-count {
   font-size: 10px;
 }
 
