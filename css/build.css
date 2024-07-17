@@ -1,5 +1,5 @@
 fl-helper[name="social-actions"] .social-actions {
-  display: inline!important;
+  display: inline-block !important;
 }
 
 fl-helper[name="social-actions"] .social-actions .like,
@@ -10,6 +10,10 @@ fl-helper[name="social-actions"] .social-actions .bookmark {
 
 fl-helper[name="social-actions"] .like-count {
   display: none;
+  font-size: 10px;
+  position: absolute;
+  bottom: 3px;
+  left: 6px;
 }
 
 fl-helper[name="social-actions"] .like-container {
@@ -17,16 +21,14 @@ fl-helper[name="social-actions"] .like-container {
   align-items: center;
 }
 
-fl-helper[name="social-actions"] .like-container span {
-  margin-right: 3px;
-}
-
 fl-helper[name="social-actions"] .small {
   font-size: 16px;
 }
+
 fl-helper[name="social-actions"] .medium {
   font-size: 18px;
 }
+
 fl-helper[name="social-actions"] .large {
   font-size: 20px;
 }
@@ -46,5 +48,5 @@ fl-helper[name="social-actions"] .large .like-count {
 fl-helper[name="social-actions"] .social-actions.editMode {
   margin: 0 5px;
   padding: 6px;
-  border: 1px dotted #D4D4D4; 
+  border: 1px dotted #D4D4D4;
 }
