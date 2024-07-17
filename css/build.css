@@ -12,13 +12,14 @@ fl-helper[name="social-actions"] .like-count {
   display: none;
   font-size: 10px;
   position: absolute;
-  bottom: 3px;
-  left: 6px;
+  bottom: 0px;
+  left: -3px;
 }
 
 fl-helper[name="social-actions"] .like-container {
   display: none;
   align-items: center;
+  padding: 5px;
 }
 
 fl-helper[name="social-actions"] .small {
