@@ -12,8 +12,8 @@ fl-helper[name="social-actions"] .like-count {
   display: none;
   font-size: 10px;
   position: absolute;
-  bottom: 0px;
-  left: 2px;
+  bottom: 2px;
+  right: 20px;
 }
 
 .mode-interact fl-helper[name="social-actions"] .like-count {
@@ -25,6 +25,7 @@ fl-helper[name="social-actions"] .like-container {
   display: none;
   align-items: center;
   padding: 5px;
+  position: relative;
 }
 
 fl-helper[name="social-actions"] .small {
@@ -55,4 +56,6 @@ fl-helper[name="social-actions"] .social-actions.editMode {
   margin: 0 5px;
   padding: 6px;
   border: 1px dotted #D4D4D4;
+  width: 40px;
+  height: 40px;
 }
