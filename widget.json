@@ -37,7 +37,7 @@
     "appAssets": []
   },
   "themeSettings": {
-    "variablePrefix": "social",
+    "variablePrefix": "social-icons",
     "variables": [
       {
         "description": "Color",
