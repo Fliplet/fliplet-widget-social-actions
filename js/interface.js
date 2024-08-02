@@ -78,7 +78,7 @@ Fliplet.DataSources.get({
 
     return Promise.resolve(dsExist.id);
   }).then((dsId) => {
-    Fliplet.Widget.generateInterface({
+    return Fliplet.Widget.generateInterface({
       title: 'Social actions',
       fields: [
         {
