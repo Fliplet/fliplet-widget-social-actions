@@ -21,7 +21,7 @@ Fliplet.Widget.instance({
       const entry = socialAction?.parent?.entry || {};
       const socialActionInstanceId = socialAction.id;
 
-      Fliplet.Widget.findParents({ instanceId: socialActionInstanceId }).then(widgets => {
+      return Fliplet.Widget.findParents({ instanceId: socialActionInstanceId }).then(widgets => {
         let dynamicContainer = null;
         let recordContainer = null;
         let listRepeater = null;

@@ -30,9 +30,9 @@
       "fliplet-datasources"
     ],
     "assets": [
-      "css/index.scss",
       "css/build.css",
-      "js/build.js"
+      "js/build.js",
+      "css/index.scss"
     ],
     "appAssets": []
   },
