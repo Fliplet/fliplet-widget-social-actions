@@ -38,6 +38,8 @@
   },
   "themeSettings": {
     "variablePrefix": "social-icons",
+    "packages": ["com.fliplet.social-icons"],
+    "appSupportsContainers": true,
     "variables": [
       {
         "description": "Color",
