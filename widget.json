@@ -18,8 +18,7 @@
       "fliplet-datasources"
     ],
     "assets": [
-      "js/interface.js",
-      "css/index.scss"
+      "js/interface.js"
     ]
   },
   "build": {
