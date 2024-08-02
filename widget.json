@@ -60,6 +60,22 @@
                 "default": "inherit-tablet"
               }
             }
+          },
+          {
+            "name": "backgrounddd",
+            "default": "#ccc",
+            "label": "Full icon color",
+            "type": "color",
+            "breakpoints": {
+              "tablet": {
+                "name": "backgroundTablettt",
+                "default": "inherit-mobile"
+              },
+              "desktop": {
+                "name": "backgroundDesktoppp",
+                "default": "inherit-tablet"
+              }
+            }
           }
         ]
       }
