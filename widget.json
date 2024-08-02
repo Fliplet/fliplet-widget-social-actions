@@ -32,7 +32,7 @@
     "assets": [
       "css/build.css",
       "js/build.js",
-      "css/test.scss"
+      "css/index.scss"
     ],
     "appAssets": []
   },
