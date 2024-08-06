@@ -13,7 +13,7 @@ fl-helper[name="social-actions"] .like-count {
   font-size: 10px;
   position: absolute;
   bottom: 2px;
-  right: 20px;
+  right: 21px;
 }
 
 .mode-interact fl-helper[name="social-actions"] .like-count {
@@ -58,6 +58,7 @@ fl-helper[name="social-actions"] .social-actions.editMode {
   border: 1px dotted #D4D4D4;
   width: 40px;
   height: 40px;
+  text-align: center;
 }
 
 .component-error-before::before {
