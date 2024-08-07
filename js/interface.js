@@ -86,7 +86,20 @@ Fliplet.DataSources.get({
           type: 'radio',
           label: 'Select type for social feature',
           options: ['Bookmark', 'Like'],
-          default: 'Bookmark'
+          default: 'Bookmark',
+          change: function(value) {
+            if (value === 'Bookmark') {
+              $('.fa-heart').hide();
+              $('.fa-heart-o').hide();
+              $('.fa-bookmark-o').hide();
+              $('.fa-bookmark').show();
+            } else {
+              $('.fa-heart').show();
+              $('.fa-heart-o').hide();
+              $('.fa-bookmark').hide();
+              $('.fa-bookmark-o').hide();
+            }
+          }
         },
         {
           name: 'socialDataSourceId',
