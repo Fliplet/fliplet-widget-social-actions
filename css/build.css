@@ -17,8 +17,7 @@ fl-helper[name="social-actions"] .like-count {
 }
 
 .mode-interact fl-helper[name="social-actions"] .like-count {
-  right: 20px;
-  bottom: 1px;
+  display: none!important;
 }
 
 fl-helper[name="social-actions"] .like-container {
