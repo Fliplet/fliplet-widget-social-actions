@@ -60,6 +60,7 @@ fl-helper[name="social-actions"] .social-actions.editMode {
   text-align: center;
 }
 
+/* TODO remove this after prod implementation */
 .component-error-before::before {
   content: 'Incorrect component placement' !important;
 }
