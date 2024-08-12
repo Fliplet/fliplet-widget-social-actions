@@ -96,6 +96,9 @@ Fliplet.DataSources.get({
           default: '',
           ready: function() {
             this.val(dsId);
+          },
+          change: function(val) {
+            debugger;
           }
         },
         {
