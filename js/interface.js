@@ -86,7 +86,10 @@ Fliplet.DataSources.get({
           type: 'radio',
           label: 'Select type for social feature',
           options: ['Bookmark', 'Like'],
-          default: 'Bookmark'
+          default: 'Bookmark',
+          change: function(val) {
+            debugger;
+          }
         },
         {
           name: 'socialDataSourceId',
@@ -96,9 +99,6 @@ Fliplet.DataSources.get({
           default: '',
           ready: function() {
             this.val(dsId);
-          },
-          change: function(val) {
-            debugger;
           }
         },
         {
