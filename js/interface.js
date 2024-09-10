@@ -59,11 +59,11 @@ const columnsForSocialDataSource = [
 ];
 
 Fliplet.DataSources.get({
-  attributes: ['id', 'name', 'masterDataSourceId'],
+  attributes: ['id', 'name', 'appId'],
   where: { appId }
 })
   .then(function(dataSources) {
-    const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
+    const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource && el.appId === appId);
 
     if (!dsExist) {
       return Fliplet.DataSources.create({
@@ -72,11 +72,11 @@ Fliplet.DataSources.get({
         columns: columnsForSocialDataSource,
         accessRules
       }).then((newDataSource) => {
-        return Promise.resolve(newDataSource.masterDataSourceId || newDataSource.id);
+        return Promise.resolve(newDataSource.id);
       });
     }
 
-    return Promise.resolve(dsExist.masterDataSourceId || dsExist.id);
+    return Promise.resolve(dsExist.id);
   }).then((dsId) => {
     return Fliplet.Widget.generateInterface({
       title: 'Social actions',
