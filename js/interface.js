@@ -59,7 +59,7 @@ const columnsForSocialDataSource = [
 ];
 
 Fliplet.DataSources.get({
-  attributes: ['id', 'name'],
+  // attributes: ['id', 'name'],
   where: { appId }
 })
   .then(function(dataSources) {
@@ -92,10 +92,9 @@ Fliplet.DataSources.get({
           name: 'socialDataSourceId',
           type: 'text',
           label: 'Global Social Actions Data Source ID',
-          // hidden: true,
+          hidden: true,
           default: '',
-          ready: function(v) {
-            debugger
+          ready: function() {
             this.val(dsId);
           }
         },
