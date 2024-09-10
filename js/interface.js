@@ -92,7 +92,7 @@ Fliplet.DataSources.get({
           name: 'socialDataSourceId',
           type: 'text',
           label: 'Global Social Actions Data Source ID',
-          hidden: true,
+          // hidden: true,
           default: '',
           ready: function() {
             this.val(dsId);
