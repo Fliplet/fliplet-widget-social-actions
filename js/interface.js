@@ -59,7 +59,7 @@ const columnsForSocialDataSource = [
 ];
 
 Fliplet.DataSources.get({
-  // attributes: ['id', 'name'],
+  attributes: ['id', 'name', 'masterDataSourceId'],
   where: { appId }
 })
   .then(function(dataSources) {
@@ -72,11 +72,11 @@ Fliplet.DataSources.get({
         columns: columnsForSocialDataSource,
         accessRules
       }).then((newDataSource) => {
-        return Promise.resolve(newDataSource.id);
+        return Promise.resolve(newDataSource.masterDataSourceId || newDataSource.id);
       });
     }
 
-    return Promise.resolve(dsExist.id);
+    return Promise.resolve(dsExist.masterDataSourceId || dsExist.id);
   }).then((dsId) => {
     return Fliplet.Widget.generateInterface({
       title: 'Social actions',
