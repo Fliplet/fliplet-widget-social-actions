@@ -94,7 +94,8 @@ Fliplet.DataSources.get({
           label: 'Global Social Actions Data Source ID',
           // hidden: true,
           default: '',
-          ready: function() {
+          ready: function(v) {
+            debugger
             this.val(dsId);
           }
         },
