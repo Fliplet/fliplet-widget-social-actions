@@ -53,7 +53,7 @@ const accessRulesObj = {
 
 const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
 const globalSocialActionsDataSource = 'Global Social Actions';
-const appId = Fliplet.Env.get('appId');
+const appId = Fliplet.Env.get('masterAppId');
 const columnsForSocialDataSource = [
   'Email', 'Data Source Id', 'Data Source Entry Id', 'DateTime', 'Type', 'Device Uuid'
 ];
