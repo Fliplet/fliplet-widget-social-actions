@@ -1,3 +1,7 @@
+.fl-page-content-wrapper {
+  background-color: purple!important;
+}
+
 fl-helper[name="social-actions"] .social-actions {
   display: inline-block !important;
 }
