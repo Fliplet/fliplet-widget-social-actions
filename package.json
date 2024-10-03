@@ -1,0 +1,11 @@
+{
+    "name": "com.fliplet.social-icons",
+    "version": "1.0.0",
+    "scripts": {
+      "build": "npm run build:sass",
+      "build:sass": "sass css/index.scss css/index.css"
+    },
+    "dependencies": {
+      "sass": "^1.73.3"
+    }
+  }
