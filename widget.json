@@ -32,7 +32,8 @@
     "assets": [
       "css/build.css",
       "js/build.js",
-      "css/index.scss"
+      "css/index.scss",
+      "css/index.css"
     ],
     "appAssets": []
   },
