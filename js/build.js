@@ -36,8 +36,12 @@ Fliplet.Widget.instance({
           }
         });
 
-        if (!dynamicContainer || !dynamicContainer.dataSourceId || (!recordContainer && !listRepeater)) {
-          return;
+        if (!dynamicContainer || !dynamicContainer.dataSourceId) {
+          return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Data container and select a data source');
+        }
+
+        if (!recordContainer && !listRepeater) {
+          return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Single data record or Data list component');
         }
 
         socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
