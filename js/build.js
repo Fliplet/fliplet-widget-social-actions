@@ -2,7 +2,7 @@
 // With custom security rules
 Fliplet.Widget.instance({
   name: 'social-actions',
-  displayName: 'Social actions',
+  displayName: 'Data interactive icon',
   render: {
     template: [
       '<div class="social-actions">',
@@ -41,7 +41,7 @@ Fliplet.Widget.instance({
         }
 
         if (!recordContainer && !listRepeater) {
-          return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Single data record or Data list component');
+          return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Data record or Data list component');
         }
 
         socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
@@ -101,7 +101,7 @@ Fliplet.Widget.instance({
 
         const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
         const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
-        const globalSocialActionsDataSource = 'Global Social Actions';
+        const globalSocialActionsDataSource = 'Global Data interactive icon';
 
         socialAction.fields = _.assign(
           {
