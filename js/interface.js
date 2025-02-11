@@ -1,5 +1,5 @@
 Fliplet.Widget.generateInterface({
-  title: 'Social actions',
+  title: 'Data interactive icon',
   fields: [
     {
       name: 'typeOfSocialFeature',
