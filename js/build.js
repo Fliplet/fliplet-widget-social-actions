@@ -203,7 +203,7 @@ Fliplet.Widget.instance({
     }
 
     function setActionClickEvent() {
-      $(socialAction.$el).find('.social-actions').off('click').on('click', function() {
+      $('.social-actions').off('click').on('click', function() {
         const $thisClick = $(this);
         const originalDataSource = $thisClick.data('original-datasource-id');
         const globalDataSourceId = $thisClick.data('global-datasource-id');
