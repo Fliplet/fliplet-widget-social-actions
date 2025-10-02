@@ -25,11 +25,10 @@ Fliplet.Widget.instance({
       });
 
       /**
-       * Finds and returns the parent widget and its entry data for a specified widget type
-       * @param {('RecordContainer'|'ListRepeater'|'DynamicContainer')} type - The type of parent widget to search for
-       * @returns {Promise<[Object|null, Object|null]>} A tuple containing:
-       *   - The parent widget configuration if found, null otherwise
-       *   - The parent widget instance if found, null otherwise
+       * Finds and returns the parent widget and its entry data for a specified widget type.
+       * @param {string} type - The type of parent widget to search for
+       * @param {string} packageName - The widget package name to match
+       * @returns {Promise<Array>} Promise resolving to [parentConfig|null, parentInstance|null]
        * @async
        * @private
        */
@@ -112,21 +111,84 @@ Fliplet.Widget.instance({
 
       const selectedOption = socialAction.fields.typeOfSocialFeature;
 
-      manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
+      await manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
 
       // TODO - Fliplet.DataSources.get and Fliplet.DataSources.create might be sufficient
       // TODO - it is not optimized at all to call get and create every time
       // TODO - Eng should create a solution to create this DS on every app creation?
       // TODO - It might be better to be hidden from the user
-      function manageSocialActionDataSource(dataSourceId, entryId) {
-        setTimeout(() => {
-          const globalSocialActionsDSData = (recordContainerInstance || listRepeaterInstance).globalSocialActionsDS;
-          const globalSocialActionsDSId =  (recordContainerInstance || listRepeaterInstance).globalSocialActionsDSId;
-          const cachedSessionData = (recordContainerInstance || listRepeaterInstance).cachedSessionData;
+      /**
+       * Polls until the provided condition returns a truthy value or a timeout elapses
+       * @param {Function} conditionFn - Function returning a truthy value when ready
+       * @param {Object} options - Configuration options
+       * @param {number} options.intervalMs - Interval between checks in milliseconds
+       * @param {number} options.timeoutMs - Maximum time to wait in milliseconds
+       * @returns {Promise<*>} Resolves with the condition result or null on timeout
+       * @private
+       */
+      function waitFor(conditionFn, options) {
+        const opts = options || {};
+        const intervalMs = typeof opts.intervalMs === 'number' ? opts.intervalMs : 100;
+        const timeoutMs = typeof opts.timeoutMs === 'number' ? opts.timeoutMs : 5000;
 
-          setAttributes(dataSourceId, globalSocialActionsDSData, entryId, globalSocialActionsDSId, cachedSessionData);
-          setActionClickEvent(cachedSessionData);
-        }, 500);
+        return new Promise(function(resolve) {
+          const start = Date.now();
+
+          function check() {
+            let result;
+
+            try {
+              result = conditionFn();
+            } catch (e) {
+              // Ignore errors during evaluation and keep polling
+            }
+
+            if (result) {
+              return resolve(result);
+            }
+
+            if (Date.now() - start >= timeoutMs) {
+              return resolve(null);
+            }
+
+            setTimeout(check, intervalMs);
+          }
+
+          check();
+        });
+      }
+
+      /**
+       * Ensures the parent widget data is available before initializing attributes and click handlers.
+       * Falls back after a timeout to avoid excessive delays in UI rendering.
+       * @param {number|string} dataSourceId - Original data source id
+       * @param {number|string} entryId - Entry id within the original data source
+       * @returns {Promise<void>} Resolves when the component has initialized its attributes and events
+       * @private
+       */
+      async function manageSocialActionDataSource(dataSourceId, entryId) {
+        const $el = $(socialAction.$el);
+
+        // Avoid layout shift while waiting for data
+        $el.find('.social-actions').css('visibility', 'hidden');
+
+        // Wait until the parent exposes the required data
+        await waitFor(function() {
+          const parentInstance = recordContainerInstance || listRepeaterInstance;
+
+          return parentInstance && parentInstance.globalSocialActionsDS && parentInstance.globalSocialActionsDSId && parentInstance.cachedSessionData;
+        }, { intervalMs: 100, timeoutMs: 5000 });
+
+        const parentInstance = recordContainerInstance || listRepeaterInstance;
+        const globalSocialActionsDSData = parentInstance && parentInstance.globalSocialActionsDS ? parentInstance.globalSocialActionsDS : [];
+        const globalSocialActionsDSId = parentInstance && parentInstance.globalSocialActionsDSId ? parentInstance.globalSocialActionsDSId : undefined;
+        const cachedSessionData = parentInstance && parentInstance.cachedSessionData ? parentInstance.cachedSessionData : undefined;
+
+        setAttributes(dataSourceId, globalSocialActionsDSData, entryId, globalSocialActionsDSId, cachedSessionData);
+        setActionClickEvent(cachedSessionData);
+
+        // Reveal once initialized (even if with fallbacks)
+        $el.find('.social-actions').css('visibility', 'visible');
       }
 
       function handleSession(session) {
@@ -217,7 +279,7 @@ Fliplet.Widget.instance({
           user = handleSession(cachedSessionData);
         }
 
-        const filteredGlobalSocialActionsDSData = globalSocialActionsDSData.filter((row) => {
+        const filteredGlobalSocialActionsDSData = globalSocialActionsDSData && globalSocialActionsDSData.filter((row) => {
           const rowData = row.data || {};
           const userEmail = user ? user.Email : '';
 
@@ -261,7 +323,7 @@ Fliplet.Widget.instance({
             .attr('data-original-datasource-id', dataSourceId)
             .attr('data-global-datasource-id', globalSocialActionsDSId)
             .attr('data-entry-id', entryId);
-          currentSocialAction.find('.like-count').html(filteredGlobalSocialActionsDSData.length);
+          currentSocialAction.find('.like-count').html(filteredGlobalSocialActionsDSData && filteredGlobalSocialActionsDSData.length);
         }
       }
     },
