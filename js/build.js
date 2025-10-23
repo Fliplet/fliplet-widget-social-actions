@@ -51,6 +51,14 @@ Fliplet.Widget.instance({
         findParentDataWidget('ListRepeater', 'com.fliplet.list-repeater')
       ]);
 
+      if (!dynamicContainer || !dynamicContainer.dataSourceId) {
+        return Fliplet.UI.Toast('This component needs to be placed inside a Data container and select a data source');
+      }
+
+      if (!recordContainer && !listRepeater) {
+        return Fliplet.UI.Toast('This component needs to be placed inside a Data record or Data list component');
+      }
+
       let ENTRY = null;
 
       if (recordContainerInstance) {
@@ -82,22 +90,7 @@ Fliplet.Widget.instance({
         return;
       }
 
-
       const entry = ENTRY;
-
-      // TODO: remove this function when the product provides a solution
-      function errorMessageStructureNotValid($element, message) {
-        $element.addClass('component-error-before-xxx');
-        Fliplet.UI.Toast(message);
-      }
-
-      if (!dynamicContainer || !dynamicContainer.dataSourceId) {
-        return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Data container and select a data source');
-      }
-
-      if (!recordContainer && !listRepeater) {
-        return errorMessageStructureNotValid($(socialAction.$el), 'This component needs to be placed inside a Data record or Data list component');
-      }
 
       socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
 
