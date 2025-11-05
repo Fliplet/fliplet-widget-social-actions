@@ -84,7 +84,7 @@ Fliplet.Widget.instance({
 
       const entry = ENTRY;
 
-      // TODO: remove this function when the product provides a solution
+      // TODO: remove this function when the  product provides a solution
       function errorMessageStructureNotValid($element, message) {
         $element.addClass('component-error-before-xxx');
         Fliplet.UI.Toast(message);
