@@ -25,10 +25,11 @@ Fliplet.Widget.instance({
       });
 
       /**
-       * Finds and returns the parent widget and its entry data for a specified widget type.
-       * @param {string} type - The type of parent widget to search for
-       * @param {string} packageName - The widget package name to match
-       * @returns {Promise<Array>} Promise resolving to [parentConfig|null, parentInstance|null]
+       * Finds and returns the parent widget and its entry data for a specified widget type
+       * @param {('RecordContainer'|'ListRepeater'|'DynamicContainer')} type - The type of parent widget to search for
+       * @returns {Promise<[Object|null, Object|null]>} A tuple containing:
+       *   - The parent widget configuration if found, null otherwise
+       *   - The parent widget instance if found, null otherwise
        * @async
        * @private
        */
@@ -93,7 +94,62 @@ Fliplet.Widget.instance({
 
       socialAction.dataSourceLfdId = dynamicContainer.dataSourceId;
 
+      const accessRulesObj = {
+        accessRulesBookmarks: [
+          { 'type': ['insert'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Email': { 'equals': '{{user.[Email]}}' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+            ]
+          },
+          { 'type': ['select'], 'allow': 'all', 'enabled': true, 'require': [
+            { 'Type': { 'equals': 'Bookmark' } },
+            { 'Email': { 'equals': '{{user.[Email]}}' } }
+          ]
+          },
+          // TODO remove this condition when we agree on the security rules
+          { 'type': ['select'], 'allow': 'all', 'enabled': true },
+          { 'type': ['select'], 'allow': 'all', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Bookmark' } },
+              { 'Device Uuid': { 'equals': '{{session.uuid}}' } }
+            ]
+          }
+        ],
+        accessRulesLikes: [
+          { 'type': ['insert'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } }
+            ]
+          },
+          { 'type': ['delete'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } },
+              { 'Email': { 'equals': '{{user.[Email]}}' } }
+            ]
+          },
+          { 'type': ['select'], 'allow': 'loggedIn', 'enabled': true,
+            'require': [
+              { 'Type': { 'equals': 'Like' } }
+            ]
+          }
+        ]
+      };
+
+      const accessRules = [...accessRulesObj.accessRulesBookmarks, ...accessRulesObj.accessRulesLikes];
       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
+      const globalSocialActionsDataSource = 'Global Data interactive icon';
 
       socialAction.fields = _.assign(
         {
@@ -103,85 +159,40 @@ Fliplet.Widget.instance({
       );
 
       const selectedOption = socialAction.fields.typeOfSocialFeature;
+      const columnsForSocialDataSource = [
+        'Email', 'Data Source Id', 'Data Source Entry Id', 'Datetime', 'Type', 'Device Uuid'
+      ];
+      const appId = Fliplet.Env.get('appId');
 
-      await manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
+      manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
 
       // TODO - Fliplet.DataSources.get and Fliplet.DataSources.create might be sufficient
       // TODO - it is not optimized at all to call get and create every time
       // TODO - Eng should create a solution to create this DS on every app creation?
       // TODO - It might be better to be hidden from the user
-      /**
-       * Polls until the provided condition returns a truthy value or a timeout elapses
-       * @param {Function} conditionFn - Function returning a truthy value when ready
-       * @param {Object} options - Configuration options
-       * @param {number} options.intervalMs - Interval between checks in milliseconds
-       * @param {number} options.timeoutMs - Maximum time to wait in milliseconds
-       * @returns {Promise<*>} Resolves with the condition result or null on timeout
-       * @private
-       */
-      function waitFor(conditionFn, options) {
-        const opts = options || {};
-        const intervalMs = typeof opts.intervalMs === 'number' ? opts.intervalMs : 100;
-        const timeoutMs = typeof opts.timeoutMs === 'number' ? opts.timeoutMs : 5000;
+      function manageSocialActionDataSource(dataSourceId, entryId) {
+        return Fliplet.DataSources.get({
+          attributes: ['id', 'name'],
+          where: { appId }
+        })
+          .then(function(dataSources) {
+            const dsExist = dataSources.find(el => el.name === globalSocialActionsDataSource);
 
-        return new Promise(function(resolve) {
-          const start = Date.now();
-
-          function check() {
-            let result;
-
-            try {
-              result = conditionFn();
-            } catch (e) {
-              // Ignore errors during evaluation and keep polling
+            if (!dsExist) {
+              return Fliplet.DataSources.create({
+                name: globalSocialActionsDataSource,
+                appId,
+                columns: columnsForSocialDataSource,
+                accessRules
+              }).then(function(newDataSource) {
+                setAttributes(dataSourceId, newDataSource.id, entryId);
+                setActionClickEvent();
+              });
             }
 
-            if (result) {
-              return resolve(result);
-            }
-
-            if (Date.now() - start >= timeoutMs) {
-              return resolve(null);
-            }
-
-            setTimeout(check, intervalMs);
-          }
-
-          check();
-        });
-      }
-
-      /**
-       * Ensures the parent widget data is available before initializing attributes and click handlers.
-       * Falls back after a timeout to avoid excessive delays in UI rendering.
-       * @param {number|string} dataSourceId - Original data source id
-       * @param {number|string} entryId - Entry id within the original data source
-       * @returns {Promise<void>} Resolves when the component has initialized its attributes and events
-       * @private
-       */
-      async function manageSocialActionDataSource(dataSourceId, entryId) {
-        const $el = $(socialAction.$el);
-
-        // Avoid layout shift while waiting for data
-        $el.find('.social-actions').css('visibility', 'hidden');
-
-        // Wait until the parent exposes the required data
-        await waitFor(function() {
-          const parentInstance = recordContainerInstance || listRepeaterInstance;
-
-          return parentInstance && parentInstance.globalSocialActionsDS && parentInstance.globalSocialActionsDSId && parentInstance.cachedSessionData;
-        }, { intervalMs: 100, timeoutMs: 5000 });
-
-        const parentInstance = recordContainerInstance || listRepeaterInstance;
-        const globalSocialActionsDSData = parentInstance && parentInstance.globalSocialActionsDS ? parentInstance.globalSocialActionsDS : [];
-        const globalSocialActionsDSId = parentInstance && parentInstance.globalSocialActionsDSId ? parentInstance.globalSocialActionsDSId : undefined;
-        const cachedSessionData = parentInstance && parentInstance.cachedSessionData ? parentInstance.cachedSessionData : undefined;
-
-        setAttributes(dataSourceId, globalSocialActionsDSData, entryId, globalSocialActionsDSId, cachedSessionData);
-        setActionClickEvent(cachedSessionData);
-
-        // Reveal once initialized (even if with fallbacks)
-        $el.find('.social-actions').css('visibility', 'visible');
+            setAttributes(dataSourceId, dsExist.id, entryId);
+            setActionClickEvent();
+          });
       }
 
       function handleSession(session) {
@@ -201,25 +212,86 @@ Fliplet.Widget.instance({
         }
       }
 
-      function setActionClickEvent(cachedSessionData) {
+      function setActionClickEvent() {
         $(socialAction.$el).find('.social-actions').off('click').on('click', function() {
           const $thisClick = $(this);
           const originalDataSource = $thisClick.data('original-datasource-id');
           const globalDataSourceId = $thisClick.data('global-datasource-id');
           const dataSourceEntryId = $thisClick.data('entry-id');
 
+          return Fliplet.User.getCachedSession().then(function(session) {
+            let user = '';
+
+            if (session && session.entries) {
+              user = handleSession(session);
+            }
+
+            return Fliplet.DataSources.connect(globalDataSourceId)
+              .then(function(connection) {
+                let where = {
+                  'Data Source Id': originalDataSource,
+                  'Data Source Entry Id': dataSourceEntryId,
+                  'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                };
+
+                if (user) {
+                  where.Email = user.Email;
+                } else {
+                  where['Device Uuid'] = deviceUuid;
+                }
+
+                return connection.findOne({
+                  where
+                }).then(function(record) {
+                  if (record) {
+                    return connection.removeById(record.id)
+                      .then(function onRemove() {
+                        if ($thisClick.find('.bookmark:visible').length !== 0) {
+                          $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
+                        } else {
+                          $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
+                          $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) - 1);
+                        }
+                      });
+                  }
+
+                  return connection.insert({
+                    'Email': user ? user.Email : '',
+                    'Device Uuid': deviceUuid,
+                    'Data Source Id': originalDataSource,
+                    'Data Source Entry Id': dataSourceEntryId,
+                    'Datetime': new Date().toISOString(),
+                    'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                  }).then(function() {
+                    if ($thisClick.find('.bookmark:visible').length !== 0) {
+                      $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
+                    } else {
+                      $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
+                      $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) + 1);
+                    }
+                  });
+                });
+              });
+          });
+        });
+      }
+
+      function setAttributes(dataSourceId, globalDataSourceId, entryId) {
+        const $el = $(socialAction.$el);
+
+        return Fliplet.User.getCachedSession().then(function(session) {
           let user = '';
 
-          if (cachedSessionData && cachedSessionData.entries) {
-            user = handleSession(cachedSessionData);
+          if (session && session.entries) {
+            user = handleSession(session);
           }
 
           return Fliplet.DataSources.connect(globalDataSourceId)
             .then(function(connection) {
               let where = {
-                'Data Source Id': originalDataSource,
-                'Data Source Entry Id': dataSourceEntryId,
-                'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
+                'Data Source Id': dataSourceId,
+                'Data Source Entry Id': entryId,
+                'Type': selectedOption
               };
 
               if (user) {
@@ -228,96 +300,53 @@ Fliplet.Widget.instance({
                 where['Device Uuid'] = deviceUuid;
               }
 
-              return connection.findOne({
-                where
-              }).then(function(record) {
-                if (record) {
-                  return connection.removeById(record.id)
-                    .then(function onRemove() {
-                      if ($thisClick.find('.bookmark:visible').length !== 0) {
-                        $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
-                      } else {
-                        $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
-                        $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) - 1);
-                      }
-                    });
-                }
+              if (selectedOption === 'Bookmark') {
+                return connection.findOne({
+                  where
+                }).then(function(record) {
+                  $el.find('.like').hide();
+                  $el.find('.bookmark').show();
 
-                return connection.insert({
-                  'Email': user ? user.Email : '',
-                  'Device Uuid': deviceUuid,
-                  'Data Source Id': originalDataSource,
-                  'Data Source Entry Id': dataSourceEntryId,
-                  'Datetime': new Date().toISOString(),
-                  'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
-                }).then(function() {
-                  if ($thisClick.find('.bookmark:visible').length !== 0) {
-                    $thisClick.find('.bookmark').toggleClass('fa-bookmark fa-bookmark-o');
-                  } else {
-                    $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
-                    $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) + 1);
+                  if (record) {
+                    $el.find('.bookmark')
+                      .addClass('fa-bookmark')
+                      .removeClass('fa-bookmark-o');
                   }
+
+                  $el.find('.social-actions')
+                    .attr('data-original-datasource-id', dataSourceId);
+                  $el.find('.social-actions')
+                    .attr('data-global-datasource-id', globalDataSourceId);
+                  $el.find('.social-actions')
+                    .attr('data-entry-id', entryId);
                 });
-              });
+              } else if (selectedOption === 'Like') {
+                return connection.find({
+                  where,
+                  attributes: ['Email', 'Device Uuid']
+                }).then(function(records) {
+                  $el.find('.like').show();
+                  $el.find('.like-count').show();
+                  $el.find('.like-container').css('display', 'flex');
+
+                  if (records && records.find(el =>
+                    el.data.Email === (user ? user.Email : '') || el.data['Device Uuid'] === deviceUuid)) {
+                    $el.find('.like')
+                      .addClass('fa-heart')
+                      .removeClass('fa-heart-o');
+                  }
+
+                  let currentSocialAction = $el.find('.social-actions');
+
+                  currentSocialAction
+                    .attr('data-original-datasource-id', dataSourceId)
+                    .attr('data-global-datasource-id', globalDataSourceId)
+                    .attr('data-entry-id', entryId);
+                  currentSocialAction.find('.like-count').html(records.length);
+                });
+              }
             });
         });
-      }
-
-      function setAttributes(dataSourceId, globalSocialActionsDSData, entryId, globalSocialActionsDSId, cachedSessionData) {
-        const $el = $(socialAction.$el);
-
-        let user = '';
-
-        if (cachedSessionData && cachedSessionData.entries) {
-          user = handleSession(cachedSessionData);
-        }
-
-        const filteredGlobalSocialActionsDSData = globalSocialActionsDSData && globalSocialActionsDSData.filter((row) => {
-          const rowData = row.data || {};
-          const userEmail = user ? user.Email : '';
-
-          return rowData['Data Source Id'] === dataSourceId &&
-            rowData['Data Source Entry Id'] === entryId &&
-            rowData['Type'] === selectedOption &&
-            (rowData['Email'] === userEmail || rowData['Device Uuid'] === deviceUuid);
-        });
-
-        if (selectedOption === 'Bookmark') {
-          $el.find('.like').hide();
-          $el.find('.bookmark').show();
-
-          if (filteredGlobalSocialActionsDSData && filteredGlobalSocialActionsDSData.length) {
-            $el.find('.bookmark')
-              .addClass('fa-bookmark')
-              .removeClass('fa-bookmark-o');
-          }
-
-          $el.find('.social-actions')
-            .attr('data-original-datasource-id', dataSourceId);
-          $el.find('.social-actions')
-            .attr('data-global-datasource-id', globalSocialActionsDSId);
-          $el.find('.social-actions')
-            .attr('data-entry-id', entryId);
-        } else if (selectedOption === 'Like') {
-          $el.find('.like').show();
-          $el.find('.like-count').show();
-          $el.find('.like-container').css('display', 'flex');
-
-          if (filteredGlobalSocialActionsDSData && filteredGlobalSocialActionsDSData.find(el =>
-            el.data.Email === (user ? user.Email : '') || el.data['Device Uuid'] === deviceUuid)) {
-            $el.find('.like')
-              .addClass('fa-heart')
-              .removeClass('fa-heart-o');
-          }
-
-          let currentSocialAction = $el.find('.social-actions');
-
-          currentSocialAction
-            .attr('data-original-datasource-id', dataSourceId)
-            .attr('data-global-datasource-id', globalSocialActionsDSId)
-            .attr('data-entry-id', entryId);
-          currentSocialAction.find('.like-count').html(filteredGlobalSocialActionsDSData && filteredGlobalSocialActionsDSData.length);
-        }
       }
     },
     views: [
