@@ -84,8 +84,6 @@ Fliplet.Widget.instance({
           $el.find('.like-container').css('display', 'flex');
         }
 
-        console.error('No entry found');
-
         return;
       }
 
@@ -103,6 +101,41 @@ Fliplet.Widget.instance({
       );
 
       const selectedOption = socialAction.fields.typeOfSocialFeature;
+
+      // Ensure the correct icon is shown immediately to avoid late appearance
+      const $initialEl = $(socialAction.$el);
+
+      if (selectedOption === 'Bookmark') {
+        $initialEl.find('.like').hide();
+        $initialEl.find('.bookmark').show();
+      } else if (selectedOption === 'Like') {
+        $initialEl.find('.bookmark').hide();
+        $initialEl.find('.like').show();
+        $initialEl.find('.like-count').show();
+        $initialEl.find('.like-container').css('display', 'flex');
+      }
+
+      // If parent data is already available, initialize checked state and counts immediately
+      (function eagerInitializeIfPossible() {
+        const parentInstance = recordContainerInstance || listRepeaterInstance;
+
+        if (!parentInstance) {
+          return;
+        }
+
+        const hasGlobalData = parentInstance.globalSocialActionsDS && parentInstance.globalSocialActionsDSId;
+
+        if (!hasGlobalData) {
+          return;
+        }
+
+        const globalSocialActionsDSData = parentInstance.globalSocialActionsDS || [];
+        const globalSocialActionsDSId = parentInstance.globalSocialActionsDSId;
+        const cachedSessionData = parentInstance.cachedSessionData;
+
+        setAttributes(socialAction.dataSourceLfdId, globalSocialActionsDSData, entry.id, globalSocialActionsDSId, cachedSessionData);
+        setActionClickEvent(cachedSessionData);
+      })();
 
       await manageSocialActionDataSource(socialAction.dataSourceLfdId, entry.id);
 
@@ -160,16 +193,11 @@ Fliplet.Widget.instance({
        * @private
        */
       async function manageSocialActionDataSource(dataSourceId, entryId) {
-        const $el = $(socialAction.$el);
-
-        // Avoid layout shift while waiting for data
-        $el.find('.social-actions').css('visibility', 'hidden');
-
         // Wait until the parent exposes the required data
         await waitFor(function() {
           const parentInstance = recordContainerInstance || listRepeaterInstance;
 
-          return parentInstance && parentInstance.globalSocialActionsDS && parentInstance.globalSocialActionsDSId && parentInstance.cachedSessionData;
+          return parentInstance && parentInstance.globalSocialActionsDS && parentInstance.globalSocialActionsDSId;
         }, { intervalMs: 100, timeoutMs: 5000 });
 
         const parentInstance = recordContainerInstance || listRepeaterInstance;
@@ -179,9 +207,6 @@ Fliplet.Widget.instance({
 
         setAttributes(dataSourceId, globalSocialActionsDSData, entryId, globalSocialActionsDSId, cachedSessionData);
         setActionClickEvent(cachedSessionData);
-
-        // Reveal once initialized (even if with fallbacks)
-        $el.find('.social-actions').css('visibility', 'visible');
       }
 
       function handleSession(session) {
@@ -207,6 +232,24 @@ Fliplet.Widget.instance({
           const originalDataSource = $thisClick.data('original-datasource-id');
           const globalDataSourceId = $thisClick.data('global-datasource-id');
           const dataSourceEntryId = $thisClick.data('entry-id');
+          const normalizedEntryId = (dataSourceEntryId !== null && dataSourceEntryId !== undefined && dataSourceEntryId !== '')
+            ? String(dataSourceEntryId)
+            : undefined;
+
+          // Guard against clicks before attributes are set (e.g. when navigating quickly between pages)
+          if (!globalDataSourceId || !originalDataSource || !normalizedEntryId) {
+            Fliplet.UI.Toast('Still loading… Please try again.');
+
+            return;
+          }
+
+          // Prevent concurrent requests when users tap repeatedly
+          if ($thisClick.data('busy')) {
+            return;
+          }
+
+          $thisClick.data('busy', true);
+
 
           let user = '';
 
@@ -218,7 +261,7 @@ Fliplet.Widget.instance({
             .then(function(connection) {
               let where = {
                 'Data Source Id': originalDataSource,
-                'Data Source Entry Id': dataSourceEntryId,
+                'Data Source Entry Id': normalizedEntryId,
                 'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
               };
 
@@ -240,6 +283,12 @@ Fliplet.Widget.instance({
                         $thisClick.find('.like').toggleClass('fa-heart fa-heart-o');
                         $thisClick.find('.like-count').html(Number($thisClick.find('.like-count').text()) - 1);
                       }
+                    })
+                    .catch(function(err) {
+                      // Be tolerant to 404/entry not found during races or cross-device states
+                      if ((err && err.response && err.response.data && err.response.data.message) !== 'The requested Data Source entry has not been found.') {
+                        throw err;
+                      }
                     });
                 }
 
@@ -247,7 +296,7 @@ Fliplet.Widget.instance({
                   'Email': user ? user.Email : '',
                   'Device Uuid': deviceUuid,
                   'Data Source Id': originalDataSource,
-                  'Data Source Entry Id': dataSourceEntryId,
+                  'Data Source Entry Id': normalizedEntryId,
                   'Datetime': new Date().toISOString(),
                   'Type': $thisClick.find('.bookmark:visible').length !== 0 ? 'Bookmark' : 'Like'
                 }).then(function() {
@@ -259,6 +308,13 @@ Fliplet.Widget.instance({
                   }
                 });
               });
+            })
+            .catch(function() {
+              // Surface unexpected errors
+              Fliplet.UI.Toast('Something went wrong. Please try again.');
+            })
+            .finally(function() {
+              $thisClick.data('busy', false);
             });
         });
       }
@@ -277,7 +333,7 @@ Fliplet.Widget.instance({
           const userEmail = user ? user.Email : '';
 
           return rowData['Data Source Id'] === dataSourceId &&
-            rowData['Data Source Entry Id'] === entryId &&
+            String(rowData['Data Source Entry Id']) === String(entryId) &&
             rowData['Type'] === selectedOption &&
             (rowData['Email'] === userEmail || rowData['Device Uuid'] === deviceUuid);
         });
