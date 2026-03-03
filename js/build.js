@@ -151,7 +151,7 @@ Fliplet.Widget.instance({
       const deviceUuid = Fliplet.Profile.getDeviceUuid().uuid;
       const globalSocialActionsDataSource = 'Global Data interactive icon';
 
-      socialAction.fields = _.assign(
+      socialAction.fields = Fliplet.Utils.assign(
         {
           typeOfSocialFeature: undefined
         },
@@ -198,17 +198,17 @@ Fliplet.Widget.instance({
       function handleSession(session) {
       // check if the user is connected to a dataSource login
         if (session.entries.dataSource) {
-          return _.get(session, 'entries.dataSource.data');
+          return Fliplet.Utils.get(session, 'entries.dataSource.data');
         }
 
         // check if the user is connected to a SAML2 login
         if (session.entries.saml2) {
-          return _.get(session, 'entries.saml2.user');
+          return Fliplet.Utils.get(session, 'entries.saml2.user');
         }
 
         // check if the user is connected to a Fliplet login
         if (session.entries.flipletLogin) {
-          return _.get(session, 'entries.flipletLogin');
+          return Fliplet.Utils.get(session, 'entries.flipletLogin');
         }
       }
 
